@@ -67,3 +67,33 @@ sudo npm install --global http-server
 http-server -p 8080 # 在当前目录启动web服务，监听8080端口
 # php启动web服务
 php -S 127.0.0.1:8080
+
+# 使用rsync进行文件同步备份，从本地目录同步到远程服务器，-a参数表示归档模式，-v表示详细输出
+rsync -av /path/to/mydirectory user@backup_server:/path/to/backup/directory
+# 增量备份，使用--backup和--backup-dir选项将修改或删除的文件备份到指定目录，同时使用--delete选项删除目标目录中已删除的文件，-z选项启用压缩以节省带宽
+rsync -avz --backup --backup-dir=/path/to/backup/folder --delete /path/to/mydirectory user@backup_server:/path/to/backup/directory
+# 通过SSH进行安全传输，使用-e选项指定ssh作为远程shell，-e能执行系统命令
+rsync -avz -e ssh /path/to/mydirectory user@backup_server:/path/to/backup/directory
+
+# ssh用户分配
+ssh-keygen -t rsa -b 2048
+ssh-copy-id user@backup_server #将公钥复制到远程服务器
+
+ls -i # 显示文件的inode号码
+fdsk -l # 列出所有分区及其文件系统类型
+mount # 显示当前挂载的文件系统
+df -h # 显示磁盘使用情况，-h表示以人类可
+cat /etc/fstab # 查看自动挂载配置文件
+lsof # 列出打开的文件及其相关进程
+lsof /path/to/file # 查看哪个进程打开了指定文件
+
+# lxc安装
+sudo apt install lxc -y
+# 创建一个名为linuxcontainer的Ubuntu容器
+sudo lxc-create -n linuxcontainer -t ubuntu
+sudo lxc-start -n linuxcontainer # 启动容器
+sudo lxc-stop -n linuxcontainer # 停止容器
+lxc-config -n <container name> -s storage # 查看容器存储信息
+lxc-config -n <container name> -s security # 查看容器安全信息
+lxc-attach -n <container> name> # 进入容器终端
+lxc-attach -n <container> -f /path/to/shared/folder # 挂载主机目录到容器
