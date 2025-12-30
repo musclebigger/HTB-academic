@@ -31,6 +31,19 @@ bg # 将暂停的进程放到后台运行，如果命令又&符号则直接后�
 fg # 将后台进程放到前台运行，使用jobs查看后台任务序号
 jobs # 显示当前用户的后台任务，显示序号
 
+# 使用screen管理长时间运行任务
+screen -ls # 列出当前用户的所有screen会话
+screen -r myjob # 恢复名为myjob的screen会话
+screen -d myjob # 将名为myjob的screen会话分离（detach 
+screen -S myjob
+
+# 使用tmux管理长时间运行任务
+# Ctrl + b + d 进行detach，就可以离开tmux会话而不终止它，attach命令可以重新连接到一个已存在的会话
+tmux ls # 列出当前用户的所有tmux会话
+tmux attach -t myjob # 恢复名为myjob的tmux会话
+tmux new -s myjob # 创建名为myjob的tmux会话
+
+
 # 定时服务创建
 sudo mkdir /etc/systemd/system/mytimer.timer.d
 sudo vim /etc/systemd/system/mytimer.timer
