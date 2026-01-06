@@ -27,3 +27,10 @@ sudo nano /etc/wireguard/clients/client1.conf
 #客户端启动
 sudo wg-quick down wg0
 wg-quick up wg0
+
+# 调整MTU，如果遇到连接问题，http通，https不通试一下
+ping -M do -s 1300 8.8.8.8
+ping -M do -s 1470 8.8.8.8
+# 如果上面的一个通一个不通，说明https的第一次报文被吞了，要在跳板机上调整
+iptables -t mangle -A FORWARD -o tun0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+iptables -t mangle -A FORWARD -o eth0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
