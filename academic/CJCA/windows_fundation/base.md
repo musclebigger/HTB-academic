@@ -77,3 +77,73 @@ powershell，shift+tab可以自动补全命令，常见快捷键：
 | ↑ | 向上翻阅之前的历史命令。 |
 | ↓ | 向下翻阅之前的历史命令。 |
 | F7 | 调出一个可滚动互动的历史命令列表（TUI）。 |
+
+
+# powershell脚本库
+
+- 工具库：
+https://github.com/PowerShellMafia/PowerSploit 目录：PowerSploit.psd1
+- 发现powershell社区脚本库
+https://www.powershellgallery.com/   系统内置了命令Get-Command -Module PowerShellGet，负责和 PowerShell Gallery（官方模块仓库） 打交道。官方的库不用再绕excution 限制，可以直接用
+
+* 为什么 GitHub 下来的模块要手动 Import？
+PowerShell 只会自动加载放在 标准模块路径里的模块，且结构符合规范。标准路径是$env:PSModulePath，比如：C:\Program Files\WindowsPowerShell\Modules，"C:\Users\<user>\Documents\WindowsPowerShell\Modules"。如果github下载不在指定路径就要导入
+* 什么是 PowerShell Profile？为什么能“永久生效”？
+$PROFILE，是PowerShell 启动时自动执行的脚本的路径，如果被篡改，模块会被自动加载，比如加入Import-Module C:\htb\PowerSploit\PowerSploit.psd1
+
+
+## Execution Policy
+Execution Policy 决定：PowerShell 在当前环境下 允不允许你运行脚本 / 模块。控制的是：.ps1.psm1.psd1从文件加载的 PowerShell 代码。使用Get-ExecutionPolicy 查看当前策略是否被限制
+
+## 常用PowerShell 模块和项目
+- AdminToolbox：AdminToolbox 是一组非常实用的模块集合，允许系统管理员执行各种管理操作，涵盖但不限于：Active Directory 管理, Exchange 管理,网络管理, 文件与存储相关问题以及更多系统管理任务
+
+- ActiveDirectory：该模块是一组用于 Active Directory 的本地和远程管理工具。我们可以使用它来管理：用户，组，权限，以及更多 AD 相关对象
+
+- Empire / Situational Awareness：这是一个由 PowerShell 模块和脚本组成的集合，用于为我们提供目标主机及其所属域环境的态势感知（Situational Awareness）。该项目目前由 BC Security 作为其 Empire 框架的一部分进行维护。
+
+- Inveigh：Inveigh 是一个用于执行 网络欺骗（Network Spoofing） 和 中间人攻击（Man-in-the-Middle, MITM） 的工具。
+
+- BloodHound / SharpHound：BloodHound / SharpHound 允许我们使用 图形化分析工具 来直观地映射 Active Directory 环境。它通过使用 C# 和 PowerShell 编写的数据收集器 来完成信息采集和分析。
+
+# 默认local用户
+- Administrator:此帐户用于在本地主机上执行管理任务。
+- Default Account：默认账户由系统用于运行多用户认证应用程序，如 Xbox 工具。
+- Guest Account：此账户是一个权限有限的账户，允许没有普通用户账户的用户访问主机。默认情况下此账户是禁用的，并且应保持禁用状态。
+- WDAGUtility Account：此帐户用于 Defender 应用程序防护，可以对应用程序会话进行沙箱隔离。
+
+# 域用户
+域内的用户可以切换多local用户主机
+
+# 域管理
+RSAT 是微软官方的“远程管理工具套件”，AdminToolbox是powershell 社区维护的
+## 域身份标识
+- Object Class： 指定对象是用户、计算机还是其他类型的对象。
+- DistinguishedName： 指定对象在 AD 模式中的相对路径。
+- Enabled： 告诉我们用户是否活跃并能登录。
+- SamAccountName： 用于登录 ActiveDirectory 主机的用户名表示。
+- ObjectGUID： 是用户对象的唯一标识符。
+
+## 常用powershell命令
+| Command          | 常见别名                     | 说明 |
+|------------------|------------------------------|------|
+| Get-Item         | gi                           | 获取一个对象（可以是文件、文件夹、注册表项等）。 |
+| Get-ChildItem    | ls / dir / gci               | 列出文件夹或注册表 Hive 中的内容。 |
+| New-Item         | md / mkdir / ni              | 创建新对象（如文件、文件夹、符号链接、注册表项等）。 |
+| Set-Item         | si                           | 修改对象的属性值。 |
+| Copy-Item        | copy / cp / ci               | 复制对象，创建一个副本。 |
+| Rename-Item      | ren / rni                    | 重命名对象。 |
+| Remove-Item      | rm / del / rmdir             | 删除对象。 |
+| Get-Content      | cat / type                   | 显示文件或对象中的内容。 |
+| Add-Content      | ac                           | 向文件末尾追加内容。 |
+| Set-Content      | sc                           | 使用新数据覆盖文件中的原有内容。 |
+| Clear-Content    | clc                          | 清空文件内容，但不删除文件本身。 |
+| Compare-Object   | diff / compare               | 比较两个或多个对象（包括对象本身及其内容差异）。 |
+
+比如创建新item： ni "README.md" -itemtype file
+
+## powershell的输出说明
+- Object（对象） 是 PowerShell 中 Class（类）的一个实例（instance）。
+- Class（类） 是对象的 蓝图 / 模板 / 规范（schema / blueprint），
+定义了一个对象“应该长什么样、有什么属性、能干什么”。
+- Properties（属性） 是对象所包含的 数据（data）。
