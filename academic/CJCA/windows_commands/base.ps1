@@ -31,3 +31,20 @@ Get-MpComputerStatus
 
 # 查询当前用户启动项的注册表键值关于启动批准的信息
 Reg Query "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"
+
+# 查询本地机器启动项的注册表键值关于启动批准的信息
+ Get-Item -Path Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run | Select-Object -ExpandProperty Property
+
+ # 递归搜索注册表
+ Get-ChildItem -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion -Recurse
+# 获取本地机器启动项的注册表键值
+ Get-ItemProperty -Path Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+
+ # 递归查询当前用户HKCU注册表中包含“Password”的字符串值,/F 查询的pattern，/t 指定类型为REG_SZ，/S 递归查询，/K 查询键名
+REG QUERY HKCU /F "Password" /t REG_SZ /S /K
+# 创建注册信息键
+New-Item -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce\ -Name TestKey
+# 创建值
+New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce\TestKey -Name  "access" -PropertyType String -Value "C:\Users\htb-student\Downloads\payload.exe"
+# 上面的命令相当于reg命令
+reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\RunOnce\TestKey" /v access /t REG_SZ /d "C:\Users\htb-student\Downloads\payload.exe"  

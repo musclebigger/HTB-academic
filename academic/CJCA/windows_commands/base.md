@@ -258,11 +258,11 @@ UAC 中包含一种称为**管理员批准模式（Admin Approval Mode）**的�
 # Windows 注册表
 | 全名                  | 缩写       | 含义         |
 | ------------------- | -------- | ---------- |
-| HKEY_LOCAL_MACHINE  | **HKLM** | 本机系统级配置    |
+| HKEY_LOCAL_MACHINE  | **HKLM** | 本机系统级配置,包含有关计算机的信息，例如硬件和操作系统数据、总线类型、内存、设备驱动程序等。物理状态    |
 | HKEY_CURRENT_USER   | **HKCU** | 当前登录用户配置   |
-| HKEY_CLASSES_ROOT   | **HKCR** | 文件关联 / COM |
-| HKEY_USERS          | **HKU**  | 所有用户       |
-| HKEY_CURRENT_CONFIG | **HKCC** | 当前硬件配置     |
+| HKEY_CLASSES_ROOT   | **HKCR** | 文件关联 / COM,文件类型信息、界面扩展和向后兼容性设置在此定义。每个特定用户的操作系统和软件设置，包括用户偏好设置 |
+| HKEY_USERS          | **HKU**  | 所有用户,本地计算机的用户配置文件和当前用户配置设置定义在 HKU 下。      |
+| HKEY_CURRENT_CONFIG | **HKCC** | 当前硬件配置,显示当前设置与默认设置之间的差异 |
 
 HKLM = 本机“所有用户共享”的系统级配置，服务（Service）怎么启动，驱动（Driver）怎么加载，系统组件路径
 ，安全策略，已安装软件信息，📌 需要管理员权限才能改

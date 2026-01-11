@@ -147,3 +147,44 @@ RSAT 是微软官方的“远程管理工具套件”，AdminToolbox是powershel
 - Class（类） 是对象的 蓝图 / 模板 / 规范（schema / blueprint），
 定义了一个对象“应该长什么样、有什么属性、能干什么”。
 - Properties（属性） 是对象所包含的 数据（data）。
+- Methods：函数功能，properties就是变量
+
+## 关于搜索思路
+1. 查看用户的 AppData 文件夹是一个很好的起点。许多应用程序会在这里存储配置文件、文档的临时保存文件等。
+2. 用户的主文件夹 C:UsersUser 是一个常见的存储位置；例如 VPN 密钥、SSH 密钥等通常会存放在这里。通常它们位于隐藏文件夹中。(Get-ChildItem -Hidden)
+3. 主机保存的控制台历史文件是信息的无尽来源，尤其是当你访问管理员的主机时。可以检查两个不同的位置：
+     -  C:Users<USERNAME>AppDataRoamingMicrosoftWindowsPowershellPSReadlineConsoleHost_history.txt
+
+     - Get-Content (Get-PSReadlineOption).HistorySavePath
+4. 检查用户的剪贴板也可能获得有用信息。可以使用 Get-Clipboard 来进行检查。
+5. 查看计划任务
+
+#Windows log
+文件位置：C:\Windows\System32\winevt\logs
+
+日志管理命令: wevtutil 和Get-WinEvent
+
+事件id的文档：https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/
+
+log类别：
+- System Log：系统日志包含与 Windows 系统及其组件相关的事件。系统级事件可能包括服务启动失败。
+- Security Log：安全日志包含与安全相关的事件，例如登录失败和成功，以及文件的创建/删除。
+- Application Log：应用程序日志存储与系统上安装的任何软件/应用程序相关的事件。
+- Setup Log：安装日志包含 Windows 操作系统安装过程中生成的任何事件。在域环境中，与 Active Directory 相关的事件将记录在域控制器主机上的此日志中。
+- Forwarded Events：转发日志，从同一网络中的其他主机转发的日志。
+
+事件类型：
+- Error 表示发生了重大问题，例如服务在启动期间加载失败。
+- Warning 日志的重要性较低，但可能预示着未来可能出现问题。例如，磁盘空间不足。
+- Information 在应用程序、驱动程序或服务成功运行时记录，例如网络驱动程序成功加载时。通常，并非每个桌面应用程序都会在每次启动时记录事件，因为这可能会导致日志中出现大量额外的“噪音”。
+- Success Audit 在受审计的安全访问尝试成功时记录，例如用户登录系统时。
+- Failure Audit 在受审计的安全访问尝试失败时记录，例如用户尝试登录但输入了错误的密码时。
+
+# WEB请求方法
+- Invoke-Webrequest
+- Net.WebClient
+
+# PowerShell文件类型
+- ps1	The *.ps1 file extension represents executable PowerShell scripts.
+- psm1	The *.psm1 file extension represents a PowerShell module file. It defines what the module is and what is contained within it.
+- psd1	The *.psd1 is a PowerShell data file detailing the contents of a PowerShell module in a table of key/value pairs.

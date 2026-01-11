@@ -124,3 +124,16 @@ schtasks /delete  /tn "My Secret Task"
 
 # 主要事件,/run 立即运行任务，/tn 任务名，/s 远程计算机，/u 用户名，/p 密码
 schtasks /Run /TN "\Microsoft\Windows\EDP\EDP Inaccessible Credentials Task"
+
+# 日志管理
+wevtutil /? # 帮助
+# 列出所有日志
+wevtutil el
+# 导出指定日志到文件，/lf:日志文件路径，/f:文件格式
+wevtutil epl Application C:\Logs\Application.evtx /f:evtx
+# 查看指定日志的属性状态
+wevtutil gl "Windows PowerShell"
+# 查看有关日志或日志文件的具体状态信息，例如创建时间、上次访问和写入时间、文件大小、日志记录数等等。
+wevtutil gli "Windows PowerShell"
+# 查询最近的5条安全日志，/c:5 表示只显示5条，/rd:true 按时间倒序显示，/f:text 以文本格式显示
+wevtutil qe Security /c:5 /rd:true /f:text

