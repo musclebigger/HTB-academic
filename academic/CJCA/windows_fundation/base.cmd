@@ -108,7 +108,7 @@ net start
 wmic service list brief
 
 # 查看定时任务，schtasks 列出所有计划任务的详细信息
-SCHTASKS /Query /V /FO list
+SCHTASKS /Query /V /FO list /v
 
 # 支持参数主要事件，/create 创建定时任务，/sc schedule 频率，/tn 任务名，/tr 任务运行的程序，/s 远程计算机，/u 用户名，/p 密码，/mo 修饰符, /rl 运行级别highest还是limited，/z 任务完成后删除
 # 创建一个开机启动的反向shell任务

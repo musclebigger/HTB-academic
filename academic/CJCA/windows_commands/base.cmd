@@ -12,3 +12,6 @@ sc sdset wuauserv D:(A;;CCLCSWRPWPDTLOCRRC;;;WD) # 设置服务的安全描述�
 
 wmic os list brief # 列出操作系统信息
 wmic service get name,displayname,pathname,startmode,state # 列出服务信息
+ wmic qfe list brief # 列出已安装的更新补丁
+wmic useraccount list brief # 列出用户账户信息
+wmic process list brief # 列出进程信息

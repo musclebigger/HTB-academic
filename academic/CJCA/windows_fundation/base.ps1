@@ -6,7 +6,7 @@ Get-Help *-Service
 # 查看当前目录，相当于pwd
 Get-Location
 # 查看子目录
-Get-ChildItem
+ChildGet-Item
 # 切换目录
 Set-Location
 # 读文件
