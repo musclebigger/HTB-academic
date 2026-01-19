@@ -1,6 +1,6 @@
 # Overview
 - Uniform Resource Locator (URL) ：an URL (https://www.hackthebox.eu/example?floor=2&office=dev&employee=17) also specifies the "floor," "office," "mailbox" and the corresponding "employee"
-- Fully Qualified Domain Name (FQDN)： an FQDN (www.hackthebox.eu) only specifies the address of the "building"
+- Fully Qualified Domain Name (FQDN)： an FQDN (www.hackthebox.eu) only specifies the address of the "building"。从根开始、一路写到主机名、结尾带一个点“.”的绝对路径，保证在全球 DNS 命名空间里唯一、无歧义。www.example.com. ← FQDN（结尾的“.”显式写出）。www.example.com  ← 日常写法，仍是 FQDN；解析器会自动在尾部补根
 
 # VPN 类型
 - Site-To-Site VPN：客户端和服务器都是网络设备，通常是路由器或防火墙，并共享整个网络范围。这种方法最常用于通过互联网连接公司网络，使多个地点能够像在本地一样通过互联网进行通信。
