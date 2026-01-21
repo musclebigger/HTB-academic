@@ -18,3 +18,18 @@ dig inlanefreight.com ANY +noall +answer
 
 # 用 EDNS Client Subnet 看不同地区返回的节点；host 不支持 EDNS 选项。检查CDN节点分布情况，可以用来判断目标是否使用了CDN服务
 dig example.com @1.1.1.1 +subnet=202.96.0.0/24
+
+# 安装 vsftpd FTP 服务器
+ apt install vsftpd 
+
+ # 更新 nmap 脚本数据库
+ sudo nmap --script-updatedb
+ # 查看本地nmap脚本
+ find / -type f -name ftp* 2>/dev/null | grep scripts
+ # nmap使用脚本，并查看脚本执行
+ nmap -sV -p21 -sC -A 10.129.14.136 --script-trace
+
+# 使用 wget 镜像下载 FTP 服务器上的所有文件，--no-passive 选项用于禁用被动模式
+wget -m --no-passive ftp://anonymous:anonymous@10.129.14.136
+# 通过ssl方式连接FTP服务器
+ openssl s_client -connect 10.129.14.136:21 -starttls ftp

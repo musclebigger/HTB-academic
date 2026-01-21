@@ -36,7 +36,38 @@ inurl:blob.core.windows.net and intext:dns的txt
 - GrayHatWarfare：在线搜索引擎，专门对互联网上公开暴露的 Amazon S3 存储桶（Bucket）及文件进行持续爬取与索引，用户可通过关键词、文件后缀、正则表达式等方式快速定位这些云存储资源。其核心定位是“云存储侧漏雷达”
 
 # 主机服务枚举
+
+## FTP文件服务
 - FTP：TCP 21端口是control channel,数据交换在TCP 20（仅主动模式用）。模式包含： active and passive。高危用户anonymous
   - 在活动模式（active mode）中，数据通道TCP 20可能会，被客户端防火墙拦截如果没放行。因为是服务器20 -> 客户端port，流量入被拦截。
   - 被动模式种，是服务器指定动态port等待客户端回连。客户端port -> 服务器port，流量出不拦截。
-- TFTP（Trivial File Transfer Protocol）
+  linux内置的版本时vsFTPd,用户在/etc/ftpusers，配置在/etc/vsftpd.conf,配置选项说明：
+  - listen=NO：从 inetd 运行或作为独立守护进程运行standalone daemon
+  - anonymous_enable=NO：匿名用户，yes是危险的
+  - anon_upload_enable=YES：匿名上传，危险
+  - anon_mkdir_write_enable=YES：匿名创建，危险
+  - no_anon_password=YES：匿名无需密码，危险
+  - anon_root=/home/username/ftp：匿名用户路径配置，危险
+  - write_enable=YES：ftp可执行写入权限，危险
+  - chown_uploads=YES：修改匿名用户的ownership
+  - chown_username=username：匿名文件的文件权限赋予给哪个本地用户
+  - chroot_local_user=YES：将本地用户放入他们的主目录
+  - ls_recurse_enable=YES：允许递归展开
+  - hide_ids=YES：服务的 UID 和 GUID 表示将被覆盖，更难确定这些文件是以何种权限创建和上传的，因为owner都是ftp
+  - local_enable=YES：本地用户登录
+  - dirmessage_enable=YES：当用户进入特定目录时显示活动目录消息
+  - use_localtime=YES：是否使用本地时间同步
+  - xferlog_enable=YES：上传下载日志是否开启
+  - connect_from_port_20=YES：是否20端口
+  - pam_service_name=vsftpd：使用的pam服务
+  - rsa_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem：公钥配置
+  - ssl_enable=NO：ssl连接
+  常见命令FTP中：
+  - status：状态
+  - debug
+  - trace：追踪
+  - ls -R：递归查询文件
+  - put：上传
+  - get：下载
+  - !cat：直接读文件
+- TFTP（Trivial File Transfer Protocol）：基于UDP,没有授权，很不安全，命令包含：connect，get，put, quit, status, verbose。没有list文件的选项
