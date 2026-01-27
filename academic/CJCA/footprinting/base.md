@@ -71,3 +71,69 @@ inurl:blob.core.windows.net and intext:dns的txt
   - get：下载
   - !cat：直接读文件
 - TFTP（Trivial File Transfer Protocol）：基于UDP,没有授权，很不安全，命令包含：connect，get，put, quit, status, verbose。没有list文件的选项
+
+## SMB文件服务Server Message Block 
+权限控制通过 Access Control Lists (ACL)，包含： execute, read, full access
+### Samba服务smb server
+基于 Common Internet File System (CIFS) network协议，微软创建，又称SMB/CIFS.旧的NetBIOS service服务，通常是TCP ports 137, 138，139。CIFS 是在445
+- SMB version 1：Windows 2000支持，TCP直连
+- SMB 2.0：	Windows Vista, Windows Server 2008以上，比smb1缓存更好
+- SMB 2.1：Windows 7, Windows Server 2008 R2以上，锁定机制
+- SMB 3.0：Windows 8, Windows Server 2012，支持远程存储，多交互等
+- SMB 3.0.2：Windows 8.1, Windows Server 2012 R2
+- SMB 3.1.1：Windows 10, Windows Server 2016。完整性校验+AES-128 encryption
+  
+在 Samba 3 版本中，Samba 引入了成为 Active Directory (AD) 域的成员 的能力。也就是说，Samba 3 可以作为一个 Windows 域环境中的客户端加入到域中。在 Samba 4 中，Samba 的功能得到了显著增强，它不再仅仅是一个域成员，它还可以充当 Active Directory 域控制器 (Domain Controller, DC)。配置包括：
+
+- [sharename]：share的名字
+- workgroup = WORKGROUP/DOMAIN：所属工作组
+- path = /path/here/ ：进入路径
+- server string = STRING：连接回显的server
+- unix password sync = yes：UNIX password同步
+- usershare allow guests = yes：允许guest
+- map to guest = bad user：用户不匹配报错
+- browseable = yes：list可用文件，高危配置
+- guest ok = yes：guest不用密码，高危配置
+- read only = yes：是否只读，高危配置
+- writable = yes：允许用户可写，高危配置
+- create mask = 0700：新创建的文件需要设置权限，新创建的文件必须分配哪些权限
+- enable privileges = yes：授予特定 SID 的权限，高危配置
+- directory mask = 0777：新创建的目录必须分配哪些权限
+- logon script = script.sh：登录的脚本
+- magic script = script.sh：关闭时的脚本
+- magic output = script.out：magic脚本位置
+
+IPC$ 共享是一个特殊的、虚拟的管理共享，它本身不绑定到文件系统上的任何一个具体路径（Path）。它的主要作用不是用来访问文件，而是为了进行远程管理和通信。IPC$ 是 Inter-Process Communication，即进程间通信。它提供了一个“命名管道”，允许客户端和服务器之间进行通信，以执行各种管理任务。例如，当你使用 net use 命令连接服务器、查看共享列表、启动/停止服务、访问注册表等操作时，底层都在通过 IPC$ 通道进行通信。
+print$ 打印机共享和 IPC$ 已经在基本设置中默认包含， Remote Procedure Call (RPC)使用rpcclient，命令：
+- srvinfo：服务器信息
+- enumdomains：枚举所有域内域名
+- querydominfo：提供已部署域的域名、服务器和用户信息。
+- netshareenumall：枚举所有的share
+- netsharegetinfo <share>：某个share的全部信息
+- enumdomusers：枚举所有用户
+- queryuser <RID>：具体用户信息
+
+## NFS服务Network File System
+- NFSv2：最老的，UDP
+- NFSv3：与NFSv2不兼容，增加了报错机制文件size等优化
+- NFSv4：Kerberos授权，使用ACL控制。NFS version 4.1 (RFC 8881)使用session trunking的机制可以在分布式系统中分发。UDP or TCP port 2049
+
+NFS4之前都是 Open Network Computing Remote Procedure Call (ONC-RPC/SUN-RPC) 协议簇， TCP and UDP ports 111。使用 External Data Representation (XDR) 交换数据。4之前都不需要授权，授权和验证仅是RPC的可选项，一般通过unix的group进行验证控制。配置文件在/etc/exports，包含：
+- rw（高危）：可读写
+- ro：仅可读
+- sync：数据同步传输
+- async：异步传输数据
+- secure：禁用1024端口，1024 端口以下的端口被认为是“系统端口”或“特权端口”，通常是被系统和核心服务使用的端口。具体来说，端口 1024 以下的端口 是由操作系统保留和分配给系统级服务使用的。
+- insecure（高危）：启用1024端口
+- no_subtree_check：禁止递归查看文件树
+- root_squash（高危）：控制通过 NFS 挂载的文件系统上，root 用户（UID 0）的访问权限。启用 root_squash 后，所有来自客户端 root 用户的请求都会被重定向到 匿名用户 的权限。
+- nohide（高危）：在 NFS 环境中，通常当你挂载一个子目录时，该子目录不会被视为该文件系统的一部分，直到你明确地将它导出。如果你将某个目录导出，并且该目录下面有一个子目录挂载了其他文件系统，NFS 默认是不公开（hide）这个子目录的挂载信息的
+
+## DNS服务Domain Name System
+DNS servers类型：
+- DNS root server：复制顶级域名 top-level domains (TLD)，全世界13家 Internet Corporation for Assigned Names and Numbers (ICANN) 控制
+- Authoritative name server：某个特定域名区域（Zone）的 DNS 服务器。它们保存着关于该区域的 权威 信息，并且只会回答自己负责的域名区域中的查询。这些信息是 绑定的，也就是说，它们是最准确的，不会被修改或依赖其他来源。
+- Non-authoritative name server：非权威 DNS 服务器的存在是为了提供 更高效的 DNS 查询服务，并且实现 更好的负载均衡 和 冗余。它们通常作为 递归 DNS 服务器 或 缓存 DNS 服务器 存在，在提升 DNS 查询速度和减少 DNS 服务器负担方面发挥着重要作用。非权威 DNS 服务器 通常是 递归 DNS 服务器，它的功能是根据客户端的查询，通过向其他 DNS 服务器发起查询，最终获得解析结果并返回给客户端。
+- Caching server：缓存 DNS 服务器 侧重于 存储和返回缓存的 DNS 记录，而 非权威 DNS 服务器 侧重于 通过递归查询找到权威 DNS 服务器并获取解析结果。在实际使用中，缓存 DNS 服务器常常是非权威 DNS 服务器的一部分，因为大多数非权威 DNS 服务器都会使用缓存来提高效率。
+- Forwarding server
+- Resolver

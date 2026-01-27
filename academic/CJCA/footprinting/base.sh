@@ -33,3 +33,32 @@ dig example.com @1.1.1.1 +subnet=202.96.0.0/24
 wget -m --no-passive ftp://anonymous:anonymous@10.129.14.136
 # 通过ssl方式连接FTP服务器
  openssl s_client -connect 10.129.14.136:21 -starttls ftp
+
+
+# SMB配置文件
+cat /etc/samba/smb.conf | grep -v "#\|\;"
+
+# 使用 rpcclient 连接到 SMB 服务器并列出共享资源
+rpcclient -U "" 10.129.14.128
+# impacket工具集中的Samrdump.py脚本用于从远程Windows系统的SAM数据库中提取用户账户信息。
+Impacket - Samrdump.py
+# smbmap 工具用于枚举和映射 SMB 共享资源
+smbmap -H 10.129.14.128
+# crackmapexec 是一个强大的渗透测试工具，专门用于评估和利用 SMB 协议的漏洞。
+crackmapexec smb 10.129.14.128 --shares -u '' -p ''
+
+# Enum4Linux-ng 是一个用于枚举 Windows 和 Samba 系统信息的工具，类似于 enum4linux，但功能更强大，支持更多的选项和功能。
+git clone https://github.com/cddmp/enum4linux-ng.git
+pip3 install -r requirements.txt
+./enum4linux-ng.py 10.129.14.128 -A
+
+# 使用rpcinfo NSE脚本
+sudo nmap --script nfs* 10.129.14.128 -sV -p111,2049
+# 查看可用nfs
+showmount -e 10.129.14.128
+# 本地连nfs过程，当发现可连的nfs v3以下版本
+mkdir target-NFS
+sudo mount -t nfs 10.129.14.128:/ ./target-NFS/ -o nolock
+cd target-NFS
+tree
+sudo umount ./target-NFS
