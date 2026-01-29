@@ -62,3 +62,21 @@ sudo mount -t nfs 10.129.14.128:/ ./target-NFS/ -o nolock
 cd target-NFS
 tree
 sudo umount ./target-NFS
+
+# 查询域名的SOA记录
+dig soa www.inlanefreight.com
+# 查询某个域名的 NS（Name Server）记录，查询这个域名是由哪些 DNS 服务器负责解析的？，多解析器的情况可以增加攻击面
+dig ns inlanefreight.htb @10.129.14.128
+# 解析DNS resovler的IP地址
+dig ns1.example.com A
+# DNS 服务器指纹识别，CH 类主要被 DNS 服务器用来提供自身信息，DNS 记录不仅有“类型（A/MX/TXT）”，还有一个“类别（Class）”字段
+dig CH TXT version.bind 10.129.120.85 # IP为DNS 服务器地址
+# 查询某个域名的所有记录
+dig any inlanefreight.htb @10.129.14.128
+# 记录同步尝试，注意AXFR不是递归的，需要一个一个域名去尝试
+dig axfr inlanefreight.htb @10.129.14.128
+
+#递归爆破子域名
+for sub in $(cat /opt/useful/seclists/Discovery/DNS/subdomains-top1million-110000.txt);do dig $sub.inlanefreight.htb @10.129.14.128 | grep -v ';\|SOA' | sed -r '/^\s*$/d' | grep $sub | tee -a subdomains.txt;done
+# 使用 dnsenum爆破
+dnsenum --dnsserver 10.129.14.128 --enum -p 0 -s 0 -o subdomains.txt -f /opt/useful/seclists/Discovery/DNS/subdomains-top1million-110000.txt inlanefreight.htb

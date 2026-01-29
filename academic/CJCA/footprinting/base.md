@@ -135,5 +135,104 @@ DNS servers类型：
 - Authoritative name server：某个特定域名区域（Zone）的 DNS 服务器。它们保存着关于该区域的 权威 信息，并且只会回答自己负责的域名区域中的查询。这些信息是 绑定的，也就是说，它们是最准确的，不会被修改或依赖其他来源。
 - Non-authoritative name server：非权威 DNS 服务器的存在是为了提供 更高效的 DNS 查询服务，并且实现 更好的负载均衡 和 冗余。它们通常作为 递归 DNS 服务器 或 缓存 DNS 服务器 存在，在提升 DNS 查询速度和减少 DNS 服务器负担方面发挥着重要作用。非权威 DNS 服务器 通常是 递归 DNS 服务器，它的功能是根据客户端的查询，通过向其他 DNS 服务器发起查询，最终获得解析结果并返回给客户端。
 - Caching server：缓存 DNS 服务器 侧重于 存储和返回缓存的 DNS 记录，而 非权威 DNS 服务器 侧重于 通过递归查询找到权威 DNS 服务器并获取解析结果。在实际使用中，缓存 DNS 服务器常常是非权威 DNS 服务器的一部分，因为大多数非权威 DNS 服务器都会使用缓存来提高效率。
-- Forwarding server
-- Resolver
+- Forwarding server:把请求“转发”给上游DNS服务器,比如上网行为管理，仅作为指向
+- Resolver：本地域名解析
+
+DNS服务不加密，如果要加密使用 DNS over TLS (DoT) or DNS over HTTPS (DoH) here. In addition, the network protocol DNSCrypt 
+![alt text](image.png)
+
+DNS记录：
+- A: IPv4
+- AAAA: IPv6
+- MX: 邮件服务器
+- NS：DNS服务器（resolver）
+- TXT：各种验证机制的载体。SSL 证书验证（域名控制验证 DCV），Google Search Console 验证等，SPF（反伪造发件人）。DKIM（邮件签名验证）。DMARC（邮件策略 + 报告）
+- CNAME：别名
+- PTR：反向解析，邮件“身份可信度”验证
+- SOA:Start of Authority权威记录，domain的权威信息
+
+常用的DNS服务器bind9,配置文件在/etc/bind/named.conf，分成两部分：general settings和individual domains。包括：
+- named.conf.local
+- named.conf.options
+- named.conf.log
+
+### Local DNS Configuration
+DNS配置目录文件，告诉 DNS 服务器：“我对哪些域名是权威的”，哪些 zone（DNS 区域）由这台服务器来管理
+```
+zone "domain.com" {
+    type master;
+    file "/etc/bind/db.domain.com";
+    allow-update { key rndc-key; };
+};
+```
+- DNS 区域: domain.com
+- type类型: 主 DNS 服务器（Primary / Master）,zone 数据的“源头”。类型包括：master（主服务器，可编辑区域数据），slave（从服务器，从 master 同步），forward（仅做转发，不权威）。不常用的type，包括hint（告诉 DNS 服务器“根 DNS 服务器是谁”），stub（只同步对方 zone 的 NS 记录，不保存完整数据，主要跨组织 DNS 结构引用）
+- file:DNS记录存放位置，当前是/etc/bind/db.domain.com
+- allow-update：允许使用 rndc-key 这个密钥进行动态 DNS 更新，支持 DDNS（Dynamic DNS）允许使用TSIC可以客户端或系统可以自动修改 DNS 记录，比如DHCP 服务器自动注册主机名，AD 域环境自动更新主机记录
+
+### Zone Files
+Local DNS Configuration中的DNS记录.必须有SOA，和至少一个NS记录。SERVFAIL error message配置项用于报错回复。FQDN = 完整主机名 + 域名 + 根（点）。当前配置中存在多节点每个节点的FQDN不同
+
+```
+;
+; BIND reverse data file for local loopback interface
+;
+$ORIGIN domain.com
+$TTL 86400
+@     IN     SOA    dns1.domain.com.     hostmaster.domain.com. (
+                    2001062501 ; serial
+                    21600      ; refresh after 6 hours
+                    3600       ; retry after 1 hour
+                    604800     ; expire after 1 week
+                    86400 )    ; minimum TTL of 1 day
+
+      IN     NS     ns1.domain.com.
+      IN     NS     ns2.domain.com.
+
+      IN     MX     10     mx.domain.com.
+      IN     MX     20     mx2.domain.com.
+
+             IN     A       10.129.14.5
+
+server1      IN     A       10.129.14.5
+server2      IN     A       10.129.14.7
+ns1          IN     A       10.129.14.2
+ns2          IN     A       10.129.14.3
+
+ftp          IN     CNAME   server1
+mx           IN     CNAME   server1
+mx2          IN     CNAME   server2
+www          IN     CNAME   server2
+```
+
+### Reverse Name Resolution Zone Files（PTR）
+
+```
+root@bind9:~# cat /etc/bind/db.10.129.14
+
+;
+; BIND reverse data file for local loopback interface
+;
+$ORIGIN 14.129.10.in-addr.arpa
+$TTL 86400
+@     IN     SOA    dns1.domain.com.     hostmaster.domain.com. (
+                    2001062501 ; serial
+                    21600      ; refresh after 6 hours
+                    3600       ; retry after 1 hour
+                    604800     ; expire after 1 week
+                    86400 )    ; minimum TTL of 1 day
+
+      IN     NS     ns1.domain.com.
+      IN     NS     ns2.domain.com.
+
+5    IN     PTR    server1.domain.com.
+7    IN     MX     mx.domain.com.
+...SNIP...
+```
+- $ORIGIN :反向解析的网段
+
+### DNS的不安全配置
+- allow-query：控制哪些客户端被允许向这台 DNS 服务器发起查询请求，写在全局 options {} 里（影响整个服务器）或者单个 zone {} 里（只影响某个域），在某些版本里，没写默认any，导致内网暴露DNS
+- allow-recursion：定义DNS 服务器“帮忙去外面查答案”，如果设置yes导致开放递归服务器，需要结合allow-query做控制
+- allow-transfer：允许谁做 Zone Transfer（区域传送），DNS的主从同步机制，从master拿到全部dns记录。如果配置了allow-transfer { any; };攻击者使用dig axfr domain.com @dns-server-ip就能拉过来全部DNS的记录
+- zone-statistics：zone里的统计数据，如果 allow { any; }还配置0.0.0.0，就会统计泄露
