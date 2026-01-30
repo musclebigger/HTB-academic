@@ -236,3 +236,31 @@ $TTL 86400
 - allow-recursion：定义DNS 服务器“帮忙去外面查答案”，如果设置yes导致开放递归服务器，需要结合allow-query做控制
 - allow-transfer：允许谁做 Zone Transfer（区域传送），DNS的主从同步机制，从master拿到全部dns记录。如果配置了allow-transfer { any; };攻击者使用dig axfr domain.com @dns-server-ip就能拉过来全部DNS的记录
 - zone-statistics：zone里的统计数据，如果 allow { any; }还配置0.0.0.0，就会统计泄露
+
+## SMTP Simple Mail Transfer Protocol服务
+旧版本在25，新版本在587，常与IMAP or POP3一起。SMTP server用于组织spam 邮件，控制发件人。现在的SMTP支持ESMTP with SMTP-Auth插件。包含两部分：
+- Mail User Agent (MUA)：让“人”写邮件，邮件用户代理（MUA）。把邮件转换成 邮件头（Header） 和 邮件正文（Body）
+- Mail Transfer Agent (MTA)：邮件传输代理（MTA），邮局里的分拣中心，收发服务，检查spam在这里
+- Mail Submission Agent (MSA)：Relay server延迟可靠性检查。MUA 不直接把邮件扔给 MTA，而是先交给 MSA
+- Mail delivery agent (MDA)：邮件投递代理，把邮件“真正放进收件人邮箱”的程序
+
+Client (MUA)	➞	Submission Agent (MSA)	➞	Open Relay (MTA)	➞	Mail Delivery Agent (MDA)	➞	Mailbox (POP3/IMAP)
+
+SMTP 在网络协议层面上有两个固有的缺点：
+1. 无法获得一个可用的送达确认
+2. 用户默认是不需要进行身份验证的，因此邮件的发件人身份并不可靠。
+
+使用域名密钥识别邮件协议（DKIM）以及发件人策略框架（SPF）。将spam邮件进行垃圾邮件隔离。ESMTP 现代smtp更安全tls。常见邮件服务器postfix，配置文件在cat /etc/postfix/main.cf。SMTP命令包括：
+- AUTH PLAIN ：SMTP 的一个扩展命令让客户端在发邮件前先证明“我是谁”，登录 SMTP 服务器
+- HELO：登录开始回话
+- EHLO：Extended HELO这一步服务器会告诉你：“我支持哪些扩展功能”
+- MAIL FROM：发送人
+- RCPT TO：收件人
+- DATA：邮件传输初始化
+- RSET：邮件被丢弃，但依然保持连接
+- VRFY：检查邮件是否可用，验证“这个邮箱/用户是否存在”
+- EXPN：把一个邮件列表（别名）里的成员全部展开
+- NOOP：超时
+- QUIT：回话关闭
+
+如果relay server，MSA设置了mynetworks = 0.0.0.0/0会导致不验证来源，导致邮件欺诈

@@ -80,3 +80,10 @@ dig axfr inlanefreight.htb @10.129.14.128
 for sub in $(cat /opt/useful/seclists/Discovery/DNS/subdomains-top1million-110000.txt);do dig $sub.inlanefreight.htb @10.129.14.128 | grep -v ';\|SOA' | sed -r '/^\s*$/d' | grep $sub | tee -a subdomains.txt;done
 # 使用 dnsenum爆破
 dnsenum --dnsserver 10.129.14.128 --enum -p 0 -s 0 -o subdomains.txt -f /opt/useful/seclists/Discovery/DNS/subdomains-top1million-110000.txt inlanefreight.htb
+
+# 连接smtp
+telnet 10.129.14.128 25
+# 使用 nmap 的 smtp-open-relay 脚本检测 SMTP 服务器是否配置为开放中继（允许行为：攻击者 → 你的SMTP → 帮我把邮件转发给另一个外部邮箱），导致垃圾邮件滥用
+nmap 10.129.14.128 -p25 --script smtp-open-relay -v
+# 使用 smtp-user-enum 工具进行 SMTP 用户枚举，-M VRFY 指定使用 VRFY 方法，-U 指定用户名列表文件，-t 指定目标 SMTP 服务器 IP 地址，-m 和 -w 分别设置最大尝试次数和并发数
+smtp-user-enum -M VRFY -U ./footprinting-wordlist.txt -t STMIP -m 60 -w 20
