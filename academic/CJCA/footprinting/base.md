@@ -264,3 +264,43 @@ SMTP 在网络协议层面上有两个固有的缺点：
 - QUIT：回话关闭
 
 如果relay server，MSA设置了mynetworks = 0.0.0.0/0会导致不验证来源，导致邮件欺诈
+
+### IMAP / POP3
+- IMAP = 远程在线邮箱管理，把 邮件服务器当成“云端邮箱硬盘”。默认只是 同步副本/缓存，真正的数据在服务器
+- POP3 = 把邮件下载到本地，只有一个“收件箱”，POP3 不适合现代使用场景。SMTP 通常用于发送电子邮件。
+- SMTP 负责把邮件“送到服务器” -> IMAP 负责让用户“从服务器管理和查看邮件”
+
+端口：p110,143,993,995
+
+通过将已发送邮件复制到 IMAP 文件夹，所有客户端都能访问所有已发送邮件，无论邮件是从哪台计算机发送的。在没有其他措施的情况下，IMAP以未加密的方式运行，并以明文传输命令、电子邮件或用户名和密码。许多电子邮件服务器要求建立加密的IMAP会话，以确保邮件流量的安全性并防止未经授权访问邮箱。
+
+Dovecot 是一个 邮件接收服务器软件，主要实现的就是我们刚刚聊的 IMAP 和 POP3 协议。IMAP Commands(IMAP 规定：每条命令前必须带 tag, 1代表TAG)包括：
+- 1 LOGIN username password：登录
+- 1 LIST "" *：列出来directories
+- 1 CREATE "INBOX"：创建一个邮件箱
+- 1 DELETE "INBOX"：删除一个邮件箱
+- 1 RENAME "ToRead" "Important"：重命名
+- 1 LSUB "" *：列出“用户已经订阅（subscribed）”的邮箱文件夹
+- 1 SELECT INBOX：打开一个邮箱文件夹，让客户端可以读取和操作里面的邮件
+- 1 UNSELECT INBOX：退出选择
+- 1 FETCH <ID> all：Retrieves data 从邮件箱
+- 1 CLOSE：关闭flag未读的
+- 1 LOGOUT：关闭连接
+- tag3 FETCH 1 (BODY[])：读某个邮件的body
+POP3 Commands
+- USER username：用户什么鉴别
+- PASS password：登录用户
+- STAT：存了多少邮件数量
+- LIST：列出来 number and size of all emails.
+- RETR id：抽取指定id
+- DELE id：删除
+- CAPA：服务容量列出来
+- RSET：重置 transmitted information.
+- QUIT：退出POP3连接
+  
+危险配置（一般仅存在于自研）：
+- auth_debug：开启所有认证流程的调试日志
+- auth_debug_passwords：让日志里记录“密码相关细节”
+- auth_verbose：记录“登录失败”的详细原因
+- auth_verbose_passwords：在 verbose 日志里也显示密码
+- auth_anonymous_username：使用 “ANONYMOUS” 方式登录时映射成哪个用户名（可以匿名进入）

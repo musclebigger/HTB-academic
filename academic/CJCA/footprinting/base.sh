@@ -87,3 +87,10 @@ telnet 10.129.14.128 25
 nmap 10.129.14.128 -p25 --script smtp-open-relay -v
 # 使用 smtp-user-enum 工具进行 SMTP 用户枚举，-M VRFY 指定使用 VRFY 方法，-U 指定用户名列表文件，-t 指定目标 SMTP 服务器 IP 地址，-m 和 -w 分别设置最大尝试次数和并发数
 smtp-user-enum -M VRFY -U ./footprinting-wordlist.txt -t STMIP -m 60 -w 20
+
+# curl 连接 imap 服务 -k 允许不验证SSL证书, -u 获取邮件列表
+curl -k 'imaps://10.129.14.128' --user user:p4ssw0rd
+# 使用 openssl 连接 pop3s 服务
+openssl s_client -connect 10.129.14.128:pop3s
+# 使用 openssl 连接 imaps 服务
+openssl s_client -connect 10.129.14.128:imaps
