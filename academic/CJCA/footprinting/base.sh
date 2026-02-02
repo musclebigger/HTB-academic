@@ -94,3 +94,27 @@ curl -k 'imaps://10.129.14.128' --user user:p4ssw0rd
 openssl s_client -connect 10.129.14.128:pop3s
 # 使用 openssl 连接 imaps 服务
 openssl s_client -connect 10.129.14.128:imaps
+
+# SNMP
+cat /etc/snmp/snmpd.conf | grep -v "#" | sed -r '/^\s*$/d'
+# 使用 snmpwalk 工具进行 SNMP 枚举，-v2c 指定使用 SNMP 版本 2c，-c public 指定使用公共团体community string字符串 "public"，
+snmpwalk -v2c -c public 10.129.14.128
+# 使用 snmp-check 工具进行 SNMP 枚举，一般默认出厂设置是使用公共团体字符串 "public"只读，或者“private”读写。但是如果管理员修改过团体字符串，则需要使用正确的团体字符串才能成功连接。
+sudo apt install onesixtyone
+onesixtyone -c /opt/useful/seclists/Discovery/SNMP/snmp.txt 10.129.14.12
+# 使用crunch编写字典，crunch用法：-f 指定字符集文件，lalpha-numeric-symbol14表示小写字母、数字和符号，长度在4到8之间，-o指定输出文件名
+crunch 4 8 -f /usr/share/crunch/charset.lst lalpha-numeric-symbol14 -o snmp.txt
+# Braa虽然没有onesixtyone那么快，但是可以爆破 + 查询 OID，需要onesixtyone配合使用,先爆破出来 community string 再用 braa 查询 OID 信息/
+# braa比snmpwalk更强大，噪音更小，并发度更高，还支持多种输出格式。snmpwalk会直接做递归查询，流量较大且容易被检测到。
+sudo apt install braa
+braa <community string>@<IP>:.1.3.6.*
+braa public@10.129.14.128:.1.3.6.*
+
+# mysql配置
+sudo apt install mysql-server -y
+cat /etc/mysql/mysql.conf.d/mysqld.cnf | grep -v "#" | sed -r '/^\s*$/d'
+
+#mssql枚举
+nmap --script ms-sql-info,ms-sql-empty-password,ms-sql-xp-cmdshell,ms-sql-config,ms-sql-ntlm-info,ms-sql-tables,ms-sql-hasdbaccess,ms-sql-dac,ms-sql-dump-hashes --script-args mssql.instance-port=1433,mssql.username=sa,mssql.password=,mssql.instance-name=MSSQLSERVER -sV -p 1433 10.129.201.248
+# 使用 mssqlclient 连接到 MSSQL 服务器，-windows-auth 表示使用 Windows 身份验证，-target-ip 指定目标 IP 地址，-username 和 -password 分别指定用户名和密码
+python3 mssqlclient.py Administrator@10.129.201.248 -windows-auth

@@ -304,3 +304,40 @@ POP3 Commands
 - auth_verbose：记录“登录失败”的详细原因
 - auth_verbose_passwords：在 verbose 日志里也显示密码
 - auth_anonymous_username：使用 “ANONYMOUS” 方式登录时映射成哪个用户名（可以匿名进入）
+
+
+## Simple Network Management Protocol (SNMP) 
+网络设备监控，路由，switch，服务器等。UDP port 161.UDP 162 是被管设备（Agent）向网络管理系统（NMS）主动上报事件的通道。
+- Management Information Base (MIB):至少一位的Object Identifier (OID)，每个节点都是一个命名空间
+- Community Strings公共团体字符：谁知道这个字符串，谁就能问设备问题，v2和v1中都是明文
+- SNMPv1： no built-in authentication mechanism，小型网络中使用，也不知加密
+- SNMPv2：v2c版本，c是community社区，基本都是v2c，v1只能 GetNext一次请求一个 OID。而v2支持 GetBulk,一次请求拉一整段 MIB 表。但依旧明文
+- SNMPv3：加了授权和加密，但是配置更复杂
+
+SNMP配置在/etc/snmp/snmpd.conf中,危险配置包括：
+- rwuser noauth:  access to full OID tree无需身份验证
+- rwcommunity <community string> <IPv4 address>:access to the full OID tree不看请求来源
+- rwcommunity6 <community string> <IPv6 address>：请求来自这个 IPv6 地址，并且 community 匹配，就给 读写权限
+
+## MySQL
+配置在/etc/mysql/mysql.conf.d/mysqld.cnf，需要注意的配置：
+- user：MySQL service的运行服务用户
+- password：用户密码
+- admin_address：管理员网络地址
+- debug：debug模式
+- sql_warnings：是否把“警告信息变成可见提示”，常常导致注入回显
+- secure_file_priv：能不能往服务器文件系统读写文件，以及能读写到哪里
+
+## Microsoft SQL (MSSQL) 
+.NET框架数据库，MSSQL Databases数据库包括：
+- master：记录整个 SQL Server 实例的“户口本”
+- model：数据库创建模板
+- msdb：任务调度与自动化中心
+- tempdb：全实例共享的临时垃圾场
+- resource：系统对象的只读源码库，比如系统视图定义，内置函数，比如xp_cmdshell
+
+常见攻击面：
+1. not using encryption连接mssql服务器
+2. self-signed certificates用于加密，可能导致spoofing
+3. 启用Named Pipes（命名管道）让 MSSQL 融入 Windows SMB 攻击面，带来 NTLM Relay、横向移动和监控盲区风险，因此在跨主机环境被视为不安全。
+4. 弱密码，影子用户
