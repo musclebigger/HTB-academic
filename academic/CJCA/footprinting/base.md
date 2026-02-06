@@ -341,3 +341,20 @@ SNMP配置在/etc/snmp/snmpd.conf中,危险配置包括：
 2. self-signed certificates用于加密，可能导致spoofing
 3. 启用Named Pipes（命名管道）让 MSSQL 融入 Windows SMB 攻击面，带来 NTLM Relay、横向移动和监控盲区风险，因此在跨主机环境被视为不安全。
 4. 弱密码，影子用户
+
+## Oracle TNS (Oracle Transparent Network Substrate)
+Oracle 数据库用于客户端与数据库服务器之间通信的一套网络通信协议与架构。端口号TCP/1521。支持多种网络协议，包括：, including TCP/IP, UDP, IPX/SPX, and AppleTalk. TNS = Oracle 自己的一套“数据库网络通信协议/中间层”.作用是：让客户端知道“怎么找到数据库、用什么协议连、连到哪个实例/服务”。默认配置（ tnsnames.ora 入口配置文件and listener.ora 服务的配置文件，配置文件位置在$ORACLE_HOME/network/admin）：
+-  Oracle 9默认密码CHANGE_ON_INSTALL，10就没有了
+-  Oracle DBSNMP默认密码 dbsnmp
+工具：https://download.oracle.com/otn_software/linux/instantclient/214000/instantclient-basic-linux.x64-21.4.0.0.0dbru.zip
+
+## IPMI（Intelligent Platform Management Interface智能平台管理接口）
+端口号623 UDP，常用于ARM。常见设备包括：HP iLO, Dell DRAC, and Supermicro IPMI。轻量级二进制管理指令协议，单独隔离的系统环境，管理指令协议标准，计算机挂了可以进。必须是有BMC 芯片设备才行。运行条件：
+- Baseboard Management Controller (BMC);BMC 芯片
+- Intelligent Chassis Management Bus (ICMB):系统接口
+- Intelligent Platform Management Bus (IPMB)：BMC扩展插件
+- IPMI Memory ：存储区
+- Communications Interfaces：外部交互接口
+
+如果能进入BMC，那就代表着对主机的monitor, reboot, power off以及系统重装有全部权限。BMC在很多情况下都有web页面的管理console或者ssh。危险配置：
+- IPMI 2.0中会使用 salted SHA1 or MD5 hash，导致能爆破hashcat -m 7300 ipmi.txt -a 3

